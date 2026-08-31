@@ -1,0 +1,22 @@
+# CODEOWNERS
+# GitHub auto-requests review from these owners when the listed paths change.
+# Format: <path-pattern>  @<github-username>
+
+# Person 1 — Frontend, Auth & DevOps
+/frontend/                  @person1
+/.github/                   @person1
+/docs/                      @person1
+
+# Person 2 — Ingestion & Sanitisation Pipeline
+/backend/app/ingestion/     @person2
+/backend/app/sanitisation/  @person2
+
+# Person 3 — AI Evaluation & Persistence
+/backend/app/evaluation/    @person3
+/backend/app/persistence/   @person3
+
+# Shared backend (all three review)
+/backend/main.py            @person1 @person2 @person3
+/backend/app/models.py      @person1 @person2 @person3
+/backend/app/config.py      @person1 @person2 @person3
+/backend/app/database.py    @person3
