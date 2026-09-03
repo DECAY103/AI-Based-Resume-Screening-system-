@@ -2,10 +2,12 @@
 ingestion/extractor.py — Plain-text extraction from PDF files.
 Owner: Person 2 (M.4)
 
-Uses PyMuPDF (fitz) to extract page text.
-Must be called inside asyncio.to_thread() to avoid blocking the event loop.
+Uses PyMuPDF to extract page text.
+Call inside asyncio.to_thread() to avoid blocking the event loop.
 """
 from __future__ import annotations
+
+import pymupdf
 
 
 class ExtractionError(Exception):
@@ -13,29 +15,33 @@ class ExtractionError(Exception):
 
 
 def extract_text(pdf_bytes: bytes) -> str:
+    """Extract plain text from a PDF provided as raw bytes.
+
+    Returns concatenated text from all pages.
+    Raises ExtractionError if the doc is corrupt or has no extractable text.
     """
-    Extract plain text from a PDF provided as raw bytes.
+    if not pdf_bytes:
+        raise ExtractionError("Empty file: no data to extract.")
 
-    Args:
-        pdf_bytes: Raw bytes of a validated PDF file.
+    doc = None
+    try:
+        doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
 
-    Returns:
-        Concatenated plain text of all pages.
+        text_parts = []
+        for page in doc:
+            text_parts.append(page.get_text("text"))
 
-    Raises:
-        ExtractionError: If the document has no extractable text or is corrupt.
+        full_text = "\n".join(text_parts).strip()
 
-    IMPORTANT: Call this inside asyncio.to_thread() — PyMuPDF is synchronous and
-               will block the async event loop if called directly.
+        if not full_text:
+            raise ExtractionError("PDF has no extractable text.")
 
-    TODO (Person 2 — M.4):
-      - Open document with fitz.open(stream=pdf_bytes, filetype="pdf").
-      - Iterate pages and accumulate page.get_text("text").
-      - Raise ExtractionError if the total extracted text is empty/whitespace.
-      - Close the document in a finally block.
+        return full_text
 
-    Example:
-        import asyncio
-        text = await asyncio.to_thread(extract_text, raw_bytes)
-    """
-    raise NotImplementedError("[M.4] extract_text not yet implemented.")
+    except ExtractionError:
+        raise
+    except Exception as exc:
+        raise ExtractionError(f"Failed to extract text: {exc}") from exc
+    finally:
+        if doc:
+            doc.close()

@@ -53,6 +53,17 @@ def _make_pdf(text: str = "Sample resume content.", pages: int = 1) -> bytes:
     return bytes(pdf.output())  # fpdf2 returns bytearray, convert for python-magic
 
 
+def _make_pdf_with_text(text: str) -> bytes:
+    """Build a 1-page PDF with exact text (no page suffix appended)."""
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=12)
+    if text.strip():
+        pdf.cell(0, 10, text=text)
+    # if text is only whitespace, we just get a blank page
+    return bytes(pdf.output())
+
+
 # ---------------------------------------------------------------------------
 # PDF fixtures
 # ---------------------------------------------------------------------------
