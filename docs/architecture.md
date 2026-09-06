@@ -50,7 +50,7 @@ The AI-Based Resume Screening System is a cloud-native, decision-support applica
 
 ## Fault Recovery
 
-On startup, the FastAPI lifespan event scans PostgreSQL for records in `queued`, `extracting`, or `scoring` states and re-enqueues them automatically (see `app/persistence/recovery.py`).
+On startup, the FastAPI lifespan event scans PostgreSQL for records in `queued`, `extracting`, or `scoring` states. The current schema does not retain uploaded-file locations or extracted text, so those jobs cannot be safely re-enqueued; they are marked `failed` with an explicit recovery diagnostic. Automatic re-enqueue requires durable pipeline-input storage (see `app/persistence/recovery.py`).
 
 ## Security Constraints
 

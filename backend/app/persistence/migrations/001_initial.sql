@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS batch_jobs (
     failed_files        INT         NOT NULL DEFAULT 0,
     pre_filtered_count  INT         NOT NULL DEFAULT 0,
 
-    -- Stored for fault-recovery: enough context to re-run the pipeline on restart
-    -- TODO (Person 3 — M.9): Add storage_url or file_path column if needed.
+    -- The rubric is retained, but uploaded sources are not. Recovery therefore
+    -- marks interrupted jobs failed until durable input storage is introduced.
     rubric              JSONB,
     error_log           TEXT
 );
