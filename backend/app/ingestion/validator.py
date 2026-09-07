@@ -30,6 +30,7 @@ def check_pdf(file_bytes: bytes) -> None:
         raise ValidationError("Empty file: no data received.")
 
     # size limit
+    # max_pdf_size_mb is set in env 
     max_bytes = settings.max_pdf_size_mb * 1024 * 1024
     if len(file_bytes) > max_bytes:
         raise ValidationError(
@@ -37,9 +38,9 @@ def check_pdf(file_bytes: bytes) -> None:
             f"(max {settings.max_pdf_size_mb} MB)."
         )
 
-    # MIME check — python-magic needs bytes, not bytearray
+    # MIME check — python-magic needs bytes(immutable), not bytearray(mutable)
     raw = bytes(file_bytes) if isinstance(file_bytes, bytearray) else file_bytes
-    mime = magic.from_buffer(raw, mime=True)
+    mime = magic.from_buffer(raw, mime=True) # returns type of the file 
     if mime != "application/pdf":
         raise ValidationError(
             f"Invalid MIME type: expected application/pdf, got {mime}."
@@ -74,7 +75,7 @@ def check_zip(file_bytes: bytes) -> list[str]:
         raise ValidationError(f"Invalid ZIP archive: {exc}") from exc
 
     with zf:
-        # zip-bomb guard — check total uncompressed size from metadata
+        # zip-bomb guard - check total uncompressed size from metadata
         max_uncompressed = settings.max_zip_uncompressed_mb * 1024 * 1024
         total_uncompressed = sum(info.file_size for info in zf.infolist())
         if total_uncompressed > max_uncompressed:
@@ -83,7 +84,7 @@ def check_zip(file_bytes: bytes) -> list[str]:
                 f"(max {settings.max_zip_uncompressed_mb} MB)."
             )
 
-        # collect .pdf members (case-insensitive)
+        # collect .pdf members (case insensitive)
         pdf_names = [
             name for name in zf.namelist()
             if name.lower().endswith(".pdf")

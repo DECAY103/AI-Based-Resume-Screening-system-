@@ -20,8 +20,8 @@ import re
 
 import spacy
 
-# load model once — reused across all requests
-nlp = spacy.load("en_core_web_sm")
+# load model once // reused across all requests 
+nlp = spacy.load("en_core_web_sm")    
 
 # regex patterns
 _EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
@@ -47,6 +47,7 @@ def anonymise(text: str) -> str:
     doc = nlp(result)
     person_spans = [ent for ent in doc.ents if ent.label_ == "PERSON"]
 
+    # get index of NE and then replace it 
     # replace from end to start so indices stay valid
     for span in sorted(person_spans, key=lambda s: s.start_char, reverse=True):
         result = result[:span.start_char] + "[ANON_NAME]" + result[span.end_char:]
