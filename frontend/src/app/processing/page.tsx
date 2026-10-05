@@ -111,11 +111,10 @@ export default function ProcessingPage() {
       </header>
 
       <form className="upload-card" onSubmit={processFile}>
-        <input ref={inputRef} className="sr-only" id="resume-file" type="file" accept=".pdf,.zip,application/pdf,application/zip" onChange={onFileChange} />
-        <button className="dropzone" type="button" onClick={() => inputRef.current?.click()}>
-          <span className="upload-icon">↑</span>
-          <span><strong>{file ? file.name : "Choose a PDF or ZIP"}</strong><small>{file ? fileSize(file.size) : "PDF up to 5 MB · ZIP up to 50 MB"}</small></span>
-          <span className="browse">Browse</span>
+        <input ref={inputRef} className="file-control" id="resume-file" type="file" accept=".pdf,.zip,application/pdf,application/zip" onChange={onFileChange} />
+        <button className="file-picker" type="button" onClick={() => inputRef.current?.click()}>
+          <span className="file-picker__icon">↑</span>
+          <span><strong>{file ? "Choose another file" : "Select a PDF or ZIP"}</strong><small>{file ? `${file.name} · ${fileSize(file.size)}` : "PDF up to 5 MB · ZIP up to 50 MB"}</small></span>
         </button>
         <div className="upload-actions">
           <p>Nothing is ranked or saved here—this shows only the ingestion and sanitisation output.</p>

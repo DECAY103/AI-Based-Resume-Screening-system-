@@ -112,3 +112,10 @@ async def get_batch_results(batch_id: str) -> list[CandidateResult]:
             verdict_summary=evaluation.get("verdict_summary", "Not selected for detailed evaluation." if prefiltered else row["error_log"] or "Evaluation unavailable."),
         ))
     return results
+
+
+async def get_candidate_filename(batch_id: str, candidate_id: str) -> str | None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        value = await conn.fetchval("SELECT filename FROM candidate_evaluations WHERE batch_id=$1::uuid AND candidate_id=$2::uuid", batch_id, candidate_id)
+    return str(value) if value else None

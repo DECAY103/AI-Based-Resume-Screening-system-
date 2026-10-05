@@ -9,11 +9,12 @@ from __future__ import annotations
 import io
 import zipfile
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.ingestion.extractor import ExtractionError, extract_text
 from app.ingestion.validator import ValidationError, check_pdf, check_zip
-from app.models import ProcessingFileResult, ProcessingResponse
+from app.models import ProcessingFileResult, ProcessingResponse, UserRole
+from app.security import CurrentUser, require_roles
 from app.sanitisation.adversarial import scan_safe
 from app.sanitisation.anonymiser import anonymise
 
@@ -61,6 +62,7 @@ def _process_pdf(filename: str, pdf_bytes: bytes) -> ProcessingFileResult:
 @router.post("/preview", response_model=ProcessingResponse)
 async def preview_processing(
     file: UploadFile = File(..., description="A PDF resume or ZIP of PDF resumes"),
+    user: CurrentUser = Depends(require_roles(UserRole.candidate, UserRole.recruiter, UserRole.admin)),
 ) -> ProcessingResponse:
     """Return the direct output of validation, extraction, anonymisation and scan."""
     file_bytes = await file.read()

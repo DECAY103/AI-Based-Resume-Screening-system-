@@ -9,7 +9,7 @@ pydantic-settings==2.3.1       # settings from .env
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
 python-jose[cryptography]==3.3.0  # JWT encode/decode
-passlib[bcrypt]==1.7.4            # password hashing
+passlib==1.7.4                    # password hashing (PBKDF2-SHA256)
 pyotp==2.9.0                      # TOTP 2FA
 
 # ── PDF Processing (M.4) ──────────────────────────────────────────────────────

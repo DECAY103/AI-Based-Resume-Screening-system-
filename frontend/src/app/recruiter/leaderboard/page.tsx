@@ -13,17 +13,20 @@
 
 import { Leaderboard } from "@/components/Leaderboard";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const params = useSearchParams();
   const batchId = params.get("batch_id") ?? "";
 
-  // TODO (Person 1 — M.10): Implement leaderboard page UI.
-
   return (
-    <main>
+    <main className="shell">
       <h1>Candidate Leaderboard</h1>
-      <Leaderboard batchId={batchId} />
+      {batchId ? <Leaderboard batchId={batchId} /> : <p role="alert">A batch ID is required.</p>}
     </main>
   );
+}
+
+export default function LeaderboardPage() {
+  return <Suspense fallback={<main className="shell"><p>Loading leaderboard…</p></main>}><LeaderboardContent /></Suspense>;
 }

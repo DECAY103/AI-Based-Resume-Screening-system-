@@ -17,15 +17,13 @@ import { useState } from "react";
 export default function CandidatePage() {
   const [batchId, setBatchId] = useState<string | null>(null);
 
-  // TODO (Person 1 — M.1): Implement full candidate portal UI.
-
   return (
-    <main>
-      <h1>Submit Your Résumé</h1>
+    <main className="shell">
+      <header className="hero"><p className="eyebrow">Candidate portal</p><h1>Submit your résumé.</h1><p>Enter the recruiter batch ID and upload a PDF. Your résumé is anonymised before it is evaluated.</p></header>
       {!batchId ? (
         <UploadForm role="candidate" onSuccess={(id) => setBatchId(id)} />
       ) : (
-        <StatusPoller batchId={batchId} />
+        <StatusPoller batchId={batchId} role="candidate" />
       )}
     </main>
   );

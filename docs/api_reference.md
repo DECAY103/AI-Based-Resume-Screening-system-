@@ -8,6 +8,12 @@ All endpoints (except `/auth/login`) require `Authorization: Bearer <JWT>`.
 
 ## Auth — M.2
 
+### `POST /auth/register`
+
+Create a candidate or recruiter account and receive an `otpauth_uri`. Add that
+URI to an authenticator app, then use the generated six-digit TOTP code at
+`/auth/verify` after signing in.
+
 ### `POST /auth/login`
 Validate credentials, trigger 2FA.
 

@@ -14,9 +14,10 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60
     temp_token_expire_minutes: int = 10
     cookie_secure: bool = False
+    cors_origins: str = "http://localhost:3000"
 
     # Gemini (M.8)
-    gemini_api_key: str
+    gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     llm_provider: str = "heuristic"
 

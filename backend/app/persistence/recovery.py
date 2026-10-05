@@ -12,25 +12,14 @@ import asyncio
 from app.pipeline import run_batch
 from app.persistence.repository import list_recoverable_batches
 
-_STUCK_STATUSES = (
-    BatchStatus.queued,
-    BatchStatus.extracting,
-    BatchStatus.scoring,
-)
-
-
 async def recover_orphaned_jobs() -> None:
     """
     Scan for orphaned batch_job records and re-enqueue them.
 
     Called once during FastAPI lifespan startup (see main.py).
 
-    TODO (Person 3 — M.9):
-      1. Query batch_jobs WHERE status IN ('queued', 'extracting', 'scoring').
-      2. For each row, re-submit the processing pipeline as a background task.
-         (May require storing enough context in batch_jobs to reconstruct the task,
-          e.g. original file path or Supabase storage URL.)
-      3. Log how many jobs were recovered.
+    The original upload bytes and rubric are stored with the job, so each
+    interrupted batch can be submitted again without requiring object storage.
     """
     for batch in await list_recoverable_batches():
         if batch["upload_bytes"]:

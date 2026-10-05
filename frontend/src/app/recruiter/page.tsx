@@ -17,11 +17,9 @@ import { useState } from "react";
 export default function RecruiterPage() {
   const [batchId, setBatchId] = useState<string | null>(null);
 
-  // TODO (Person 1 — M.1): Implement recruiter dashboard UI.
-
   return (
-    <main>
-      <h1>Recruiter Dashboard</h1>
+    <main className="shell">
+      <header className="hero"><p className="eyebrow">Recruiter workspace</p><h1>Evaluate a resume batch.</h1><p>Upload a ZIP of PDF resumes and a structured job rubric. The dashboard will show live progress and ranked outcomes.</p></header>
       {!batchId ? (
         <UploadForm role="recruiter" onSuccess={(id) => setBatchId(id)} />
       ) : (

@@ -40,6 +40,9 @@ CREATE TABLE IF NOT EXISTS batch_jobs (
     error_log           TEXT
 );
 
+ALTER TABLE batch_jobs ADD COLUMN IF NOT EXISTS upload_bytes BYTEA;
+ALTER TABLE batch_jobs ADD COLUMN IF NOT EXISTS upload_filename TEXT;
+
 -- Auto-update updated_at on every write
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
@@ -49,6 +52,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS batch_jobs_updated_at ON batch_jobs;
 CREATE TRIGGER batch_jobs_updated_at
     BEFORE UPDATE ON batch_jobs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -82,6 +86,9 @@ CREATE TABLE IF NOT EXISTS candidate_evaluations (
     UNIQUE (batch_id, candidate_id)
 );
 
+ALTER TABLE candidate_evaluations ADD COLUMN IF NOT EXISTS filename TEXT;
+
+DROP TRIGGER IF EXISTS candidate_evaluations_updated_at ON candidate_evaluations;
 CREATE TRIGGER candidate_evaluations_updated_at
     BEFORE UPDATE ON candidate_evaluations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();

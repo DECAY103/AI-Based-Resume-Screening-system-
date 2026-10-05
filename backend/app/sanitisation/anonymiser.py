@@ -4,10 +4,11 @@ Owner: Person 2 (M.5)
 
 Two-pass approach:
   Pass 1 — Regex: strip emails, phone numbers, URLs.
-  Pass 2 — spaCy NER (en_core_web_sm): replace PERSON entities.
+  Pass 2 — spaCy NER (en_core_web_sm): replace PERSON and ORG entities.
 
 Placeholders:
   [ANON_NAME]   — PERSON entities
+  [ANON_ORG]    — organisation entities
   [ANON_EMAIL]  — email addresses
   [ANON_PHONE]  — phone numbers
   [ANON_URL]    — URLs
@@ -43,13 +44,14 @@ def anonymise(text: str) -> str:
     result = _PHONE_RE.sub("[ANON_PHONE]", result)
     result = _URL_RE.sub("[ANON_URL]", result)
 
-    # pass 2 — spaCy NER (replace PERSON spans, longest first to avoid overlap)
+    # pass 2 — spaCy NER (replace PII entity spans, longest first to avoid overlap)
     doc = nlp(result)
-    person_spans = [ent for ent in doc.ents if ent.label_ == "PERSON"]
+    pii_spans = [ent for ent in doc.ents if ent.label_ in {"PERSON", "ORG"}]
 
     # get index of NE and then replace it 
     # replace from end to start so indices stay valid
-    for span in sorted(person_spans, key=lambda s: s.start_char, reverse=True):
-        result = result[:span.start_char] + "[ANON_NAME]" + result[span.end_char:]
+    for span in sorted(pii_spans, key=lambda s: s.start_char, reverse=True):
+        placeholder = "[ANON_NAME]" if span.label_ == "PERSON" else "[ANON_ORG]"
+        result = result[:span.start_char] + placeholder + result[span.end_char:]
 
     return result

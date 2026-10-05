@@ -58,6 +58,7 @@ export interface ProcessingResult {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
     headers: {
       // TODO (Person 1 — M.2): Attach JWT here.
       // Authorization: `Bearer ${getToken()}`,
@@ -75,6 +76,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 // ─── Auth API (M.2) ───────────────────────────────────────────────────────────
 
 export const authApi = {
+  register: (email: string, password: string, role: "candidate" | "recruiter") =>
+    request<{ message: string; otpauth_uri: string }>("/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, role }),
+    }),
   login: (email: string, password: string) =>
     request<{ temp_token: string }>("/auth/login", {
       method: "POST",

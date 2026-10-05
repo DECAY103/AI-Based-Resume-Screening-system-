@@ -13,8 +13,10 @@ Run locally:
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db, close_db, run_migrations
+from app.config import settings
 from app.persistence.recovery import recover_orphaned_jobs
 from app.routers import auth, candidates, jobs, processing
 
@@ -35,6 +37,13 @@ app = FastAPI(
     description="Cloud-native resume screening engine with two-stage AI evaluation.",
     version="0.1.0",
     lifespan=lifespan,
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Routers ────────────────────────────────────────────────────────────────────

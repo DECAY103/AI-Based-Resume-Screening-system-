@@ -108,3 +108,20 @@ Candidate Upload (PDF / ZIP)
 ```
 
 Status flow: `queued → extracting → scoring → pre_filtered → completed | failed`
+
+---
+
+## Run locally
+
+The quickest full-stack demo uses Docker and the included free evaluator:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:3000`, create a recruiter account, add the returned
+`otpauth://` setup URI to an authenticator app, then sign in and upload a ZIP
+of PDF resumes plus a JSON rubric. The default `LLM_PROVIDER=heuristic` makes
+the application fully functional without a paid LLM API. See
+[DEPLOYMENT.md](DEPLOYMENT.md) for production deployment and optional Gemini
+configuration.

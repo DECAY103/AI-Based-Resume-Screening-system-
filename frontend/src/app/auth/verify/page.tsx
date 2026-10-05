@@ -11,11 +11,11 @@
  */
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { authApi } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function VerifyPage() {
+function VerifyForm() {
   const router = useRouter();
   const params = useSearchParams();
   const tempToken = params.get("temp_token") ?? "";
@@ -26,7 +26,6 @@ export default function VerifyPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    // TODO (Person 1 — M.2): Call authApi.verify, persist JWT, redirect by role.
     try {
       const { role } = await authApi.verify(tempToken, code);
       router.push(role === "recruiter" ? "/recruiter" : "/candidate");
@@ -36,22 +35,19 @@ export default function VerifyPage() {
   }
 
   return (
-    <main>
+    <main className="shell"><section className="upload-card auth-card">
+      <p className="eyebrow">Account security</p>
       <h1>Two-Factor Verification</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          id="2fa-code"
-          type="text"
-          inputMode="numeric"
-          placeholder="6-digit code"
-          maxLength={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          required
-        />
+      <p>Enter the current six-digit code from your authenticator app.</p>
+      <form className="form-stack" onSubmit={handleSubmit}>
+        <div><label className="field-label" htmlFor="2fa-code">Verification code</label><input id="2fa-code" type="text" inputMode="numeric" autoComplete="one-time-code" placeholder="000000" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required /></div>
         {error && <p role="alert">{error}</p>}
-        <button id="verify-submit" type="submit">Verify</button>
+        <button className="primary" id="verify-submit" type="submit">Verify</button>
       </form>
-    </main>
+    </section></main>
   );
+}
+
+export default function VerifyPage() {
+  return <Suspense fallback={<main className="shell"><p>Loading verification…</p></main>}><VerifyForm /></Suspense>;
 }
