@@ -12,6 +12,7 @@
 
 import { UploadForm } from "@/components/UploadForm";
 import { StatusPoller } from "@/components/StatusPoller";
+import { LogoutButton } from "@/components/LogoutButton";
 import { useState } from "react";
 
 export default function CandidatePage() {
@@ -21,6 +22,7 @@ export default function CandidatePage() {
 
   return (
     <main>
+      <LogoutButton />
       <h1>Submit Your Résumé</h1>
       {!batchId ? (
         <UploadForm role="candidate" onSuccess={(id) => setBatchId(id)} />
