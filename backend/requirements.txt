@@ -2,10 +2,12 @@
 fastapi==0.111.0
 uvicorn[standard]==0.30.1
 python-multipart==0.0.9        # multipart/form-data file uploads
+pydantic==2.13.5                # validated API and evaluation schemas
+pydantic-settings==2.3.1       # settings from .env
+python-dotenv==1.0.1           # .env loading used by pydantic-settings
 
 # ── Database ───────────────────────────────────────────────────────────────────
 asyncpg==0.29.0                # async PostgreSQL driver
-pydantic-settings==2.3.1       # settings from .env
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
 python-jose[cryptography]==3.3.0  # JWT encode/decode
@@ -26,9 +28,9 @@ sentence-transformers==3.0.1   # all-MiniLM-L6-v2 embeddings
 torch==2.3.1                   # CPU-only — swap for torch+cu121 if GPU available
 
 # ── AI — Stage 2 (M.8) ───────────────────────────────────────────────────────
-google-generativeai==0.7.2     # Gemini Flash API client
+google-genai==2.26.0           # Official Google GenAI SDK for Gemini API
 
 # ── Dev / Testing ─────────────────────────────────────────────────────────────
 pytest==8.2.2
 pytest-asyncio==0.23.7
-httpx==0.27.0                  # async test client for FastAPI
+httpx==0.28.1                  # test client and official Google GenAI SDK transport

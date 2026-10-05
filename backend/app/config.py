@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Gemini (M.8)
     gemini_api_key: str
     gemini_model: str = "gemini-2.5-flash"
+    stage2_timeout_seconds: float = Field(default=60.0, gt=0.0)
+    stage2_max_retries: int = Field(default=2, ge=0)
+    stage2_backoff_base_seconds: float = Field(default=1.0, ge=0.0)
 
     # Pipeline config
     stage1_top_n: int = Field(default=10, ge=0)

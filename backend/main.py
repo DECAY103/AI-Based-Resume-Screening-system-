@@ -23,10 +23,12 @@ from app.routers import auth, candidates, jobs
 async def lifespan(app: FastAPI):
     # ── Startup ────────────────────────────────────────────────────────────────
     await init_db()
-    await recover_orphaned_jobs()   # M.9 — Person 3
-    yield
-    # ── Shutdown ───────────────────────────────────────────────────────────────
-    await close_db()
+    try:
+        await recover_orphaned_jobs()   # M.9 — Person 3
+        yield
+    finally:
+        # Close even if startup recovery or request serving raises.
+        await close_db()
 
 
 app = FastAPI(

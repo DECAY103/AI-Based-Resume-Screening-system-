@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 import uuid
 
 
@@ -78,6 +78,8 @@ class UnifiedEvaluationSchema(BaseModel):
     Structured output produced by the Gemini Flash LLM (Stage 2).
     Persisted as JSONB in the candidate_evaluations table.
     """
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
     overall_score: float = Field(..., ge=0.0, le=100.0)
     skill_match_score: float = Field(..., ge=0.0, le=100.0)
     matching_skills: List[str]

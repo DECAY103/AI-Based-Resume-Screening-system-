@@ -45,6 +45,8 @@ def test_rank_candidates_orders_descending_and_breaks_ties_by_candidate_id(monke
 
     assert [candidate.candidate_id for candidate in ranked] == ["a", "b", "c"]
     assert [candidate.promoted for candidate in ranked] == [True, True, False]
+    assert [candidate.rank for candidate in ranked] == [1, 2, 3]
+    assert [candidate.status for candidate in ranked] == ["scoring", "scoring", "pre_filtered"]
 
 
 def test_rank_candidates_requires_top_n_and_threshold(monkeypatch):
@@ -95,6 +97,15 @@ def test_rank_candidates_rejects_invalid_ranker_configuration():
         semantic_ranker.rank_candidates("rubric", {}, top_n=-1, similarity_threshold=0.0)
     with pytest.raises(ValueError, match="similarity_threshold"):
         semantic_ranker.rank_candidates("rubric", {}, top_n=1, similarity_threshold=1.1)
+
+
+def test_ranker_rejects_empty_candidate_inputs_and_nonfinite_vectors(monkeypatch):
+    with pytest.raises(ValueError, match="candidate IDs"):
+        semantic_ranker.rank_candidates("rubric", {" ": "resume"}, top_n=1, similarity_threshold=0)
+    with pytest.raises(ValueError, match="must not be empty"):
+        semantic_ranker.rank_candidates("rubric", {"candidate": "  "}, top_n=1, similarity_threshold=0)
+    with pytest.raises(ValueError, match="finite"):
+        semantic_ranker._cosine_similarity([float("nan")], [1.0])
 
 
 def test_rank_candidates_uses_configured_top_n_when_not_explicitly_provided(monkeypatch):

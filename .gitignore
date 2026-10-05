@@ -14,6 +14,9 @@ build/
 venv/
 env/
 .env
+.env.*
+!.env.example
+!.env.*.example
 .env.local
 .env.*.local
 
@@ -57,7 +60,27 @@ tmp/
 .coverage
 htmlcov/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 coverage/
 .nyc_output/
 
 venv311/
+.venv/
+venv/
+venv*/
+
+# Test-only dependency staging and generated Python/test artifacts
+.testdeps/
+**/__pycache__/
+**/.pytest_cache/
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Downloaded ML model caches (do not commit model weights)
+.cache/huggingface/
+**/.cache/huggingface/
+**/huggingface/hub/
+**/torch/sentence_transformers/

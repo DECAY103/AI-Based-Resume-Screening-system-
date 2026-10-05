@@ -101,7 +101,7 @@ Ranked leaderboard for a completed batch (recruiter role).
       "missing_skills": [],
       "verdict_summary": "string",
       "cosine_similarity_score": 0.0,
-      "status": "completed|pre_filtered"
+      "status": "completed|pre_filtered|failed"
     }
   ]
 }
@@ -119,3 +119,22 @@ Ranked leaderboard for a completed batch (recruiter role).
 | `pre_filtered` | Did not make Top-N cut in Stage 1 |
 | `completed` | Stage 2 evaluation done |
 | `failed` | Unrecoverable error (see `error_log`) |
+
+## Person 2 → Person 3 application boundary
+
+The upload endpoints above are currently stubs and do not run M.3–M.6 or
+create a persisted batch. Once upstream processing is wired, it must call
+`app.evaluation.stage1_pipeline.process_batch(batch_id, sanitized_candidate_texts)`
+after validation, extraction, anonymization, and adversarial scanning have
+succeeded. Before calling it, persist the batch and rubric with
+`repository.create_batch_job(batch_id, total_files, rubric)`; `total_files`
+must match the mapping size. `sanitized_candidate_texts` maps each UUID
+`candidate_id` to sanitized resume text; the job rubric is persisted as
+`batch_jobs.rubric`. Retrieve the final results from
+`GET /api/jobs/{batch_id}/results` after processing completes. Person 3 does
+not accept raw PDFs or implement PDF extraction, anonymization, or scanning.
+
+The M.10 consumer contract is the persisted batch and candidate rows, plus the
+completed-batch results response. Only promoted candidates receive a Stage 2
+evaluation; pre-filtered and failed rows are terminal and are returned with
+their status and cosine score but no LLM evaluation.

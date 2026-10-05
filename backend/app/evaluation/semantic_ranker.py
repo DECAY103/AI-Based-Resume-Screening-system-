@@ -14,9 +14,9 @@ IMPORTANT: sentence-transformers inference is CPU-bound and synchronous.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import sqrt
+from math import hypot, isfinite
 from threading import Lock
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 
 _MODEL_NAME = "all-MiniLM-L6-v2"
@@ -29,6 +29,12 @@ class RankedCandidate:
     candidate_id: str
     cosine_similarity_score: float
     promoted: bool  # True → goes to Stage 2; False → pre_filtered
+    rank: int = 0  # One-based order after deterministic sorting.
+
+    @property
+    def status(self) -> str:
+        """Candidate lifecycle state selected by the Stage 1 decision."""
+        return "scoring" if self.promoted else "pre_filtered"
 
 
 def _get_model() -> Any:
@@ -50,12 +56,17 @@ def _cosine_similarity(left: Iterable[float], right: Iterable[float]) -> float:
     if len(left_values) != len(right_values):
         raise ValueError("Embedding vectors must have the same dimensionality.")
 
-    dot_product = sum(left_value * right_value for left_value, right_value in zip(left_values, right_values))
-    left_norm = sqrt(sum(value * value for value in left_values))
-    right_norm = sqrt(sum(value * value for value in right_values))
+    if not all(isfinite(value) for value in left_values + right_values):
+        raise ValueError("Embedding vectors must contain only finite values.")
+
+    left_norm = hypot(*left_values)
+    right_norm = hypot(*right_values)
     if left_norm == 0.0 or right_norm == 0.0:
         return 0.0
-    return dot_product / (left_norm * right_norm)
+    return sum(
+        (left_value / left_norm) * (right_value / right_norm)
+        for left_value, right_value in zip(left_values, right_values)
+    )
 
 
 def _resolve_similarity_threshold(similarity_threshold: float | None) -> float:
@@ -66,7 +77,12 @@ def _resolve_similarity_threshold(similarity_threshold: float | None) -> float:
 
         similarity_threshold = settings.stage1_similarity_threshold
 
-    if not -1.0 <= similarity_threshold <= 1.0:
+    if (
+        isinstance(similarity_threshold, bool)
+        or not isinstance(similarity_threshold, (int, float))
+        or not isfinite(similarity_threshold)
+        or not -1.0 <= similarity_threshold <= 1.0
+    ):
         raise ValueError("similarity_threshold must be between -1.0 and 1.0.")
     return float(similarity_threshold)
 
@@ -84,7 +100,7 @@ def _resolve_top_n(top_n: int | None) -> int:
 
 def rank_candidates(
     rubric_text: str,
-    candidates: dict[str, str],
+    candidates: Mapping[str, str],
     top_n: int | None = None,
     *,
     similarity_threshold: float | None = None,
@@ -110,10 +126,18 @@ def rank_candidates(
     """
     resolved_top_n = _resolve_top_n(top_n)
     threshold = _resolve_similarity_threshold(similarity_threshold)
+    if not isinstance(candidates, Mapping):
+        raise ValueError("candidates must be a mapping of candidate IDs to resume text.")
     if not candidates:
         return []
-    if not rubric_text or not rubric_text.strip():
+    if not isinstance(rubric_text, str) or not rubric_text.strip():
         raise ValueError("rubric_text must not be empty.")
+
+    for candidate_id, resume_text in candidates.items():
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            raise ValueError("candidate IDs must be non-empty strings.")
+        if not isinstance(resume_text, str) or not resume_text.strip():
+            raise ValueError(f"Resume text for candidate {candidate_id} must not be empty.")
 
     candidate_items = sorted(candidates.items(), key=lambda item: item[0])
     model = _get_model()
@@ -141,6 +165,7 @@ def rank_candidates(
             candidate_id=candidate_id,
             cosine_similarity_score=score,
             promoted=rank < resolved_top_n and score >= threshold,
+            rank=rank + 1,
         )
         for rank, (candidate_id, score) in enumerate(scored_candidates)
     ]

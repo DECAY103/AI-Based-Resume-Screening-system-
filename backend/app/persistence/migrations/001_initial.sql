@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS batch_jobs (
     failed_files        INT         NOT NULL DEFAULT 0,
     pre_filtered_count  INT         NOT NULL DEFAULT 0,
 
-    -- The rubric is retained, but uploaded sources are not. Recovery therefore
-    -- marks interrupted jobs failed until durable input storage is introduced.
+    -- The rubric is retained, but original uploads and extracted source text
+    -- are not. Stage 1 separately retains promoted sanitized text for M.8 retry.
     rubric              JSONB,
     error_log           TEXT
 );
@@ -38,6 +38,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS batch_jobs_updated_at ON batch_jobs;
 CREATE TRIGGER batch_jobs_updated_at
     BEFORE UPDATE ON batch_jobs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -59,6 +60,8 @@ CREATE TABLE IF NOT EXISTS candidate_evaluations (
 
     -- Stage 1 output (M.7)
     cosine_similarity_score FLOAT,
+    -- Sanitized input retained for promoted candidates awaiting Stage 2.
+    sanitized_resume_text   TEXT,
 
     -- Stage 2 output (M.8) — stored as JSONB (UnifiedEvaluationSchema)
     evaluation              JSONB,
@@ -69,6 +72,7 @@ CREATE TABLE IF NOT EXISTS candidate_evaluations (
     UNIQUE (batch_id, candidate_id)
 );
 
+DROP TRIGGER IF EXISTS candidate_evaluations_updated_at ON candidate_evaluations;
 CREATE TRIGGER candidate_evaluations_updated_at
     BEFORE UPDATE ON candidate_evaluations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
