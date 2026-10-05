@@ -8,6 +8,7 @@ TODO (Person 3 — M.9):
   - Use get_pool() in repositories to obtain a connection.
 """
 import asyncpg
+from pathlib import Path
 
 from app.config import settings
 
@@ -27,6 +28,14 @@ async def close_db() -> None:
     if _pool:
         await _pool.close()
         _pool = None
+
+
+async def run_migrations() -> None:
+    """Apply the idempotent initial schema on startup."""
+    pool = get_pool()
+    migration = Path(__file__).parent / "persistence" / "migrations" / "001_initial.sql"
+    async with pool.acquire() as conn:
+        await conn.execute(migration.read_text())
 
 
 def get_pool() -> asyncpg.Pool:

@@ -9,7 +9,6 @@ from __future__ import annotations
 import enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
-import uuid
 
 
 # ─── Enums ────────────────────────────────────────────────────────────────────
@@ -36,6 +35,17 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    email: str
+    password: str = Field(..., min_length=8)
+    role: UserRole
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    otpauth_uri: str
+
+
 class LoginResponse(BaseModel):
     message: str = "2FA code sent"
     temp_token: str
@@ -57,6 +67,31 @@ class TokenResponse(BaseModel):
 class UploadResponse(BaseModel):
     batch_id: str
     status_url: str
+
+
+# ─── Person 2 processing preview (M.3 – M.6) ────────────────────────────────
+
+class ProcessingFileResult(BaseModel):
+    """Human-readable result for one file in the ingestion/sanitisation flow."""
+
+    filename: str
+    status: str
+    validation_passed: bool
+    extracted_text: Optional[str] = None
+    anonymised_text: Optional[str] = None
+    safety_passed: Optional[bool] = None
+    safety_reason: Optional[str] = None
+    error: Optional[str] = None
+
+
+class ProcessingResponse(BaseModel):
+    """Synchronous preview response used by the Person 2 processing UI."""
+
+    input_type: str
+    total_files: int
+    accepted_files: int
+    rejected_files: int
+    files: List[ProcessingFileResult]
 
 
 # ─── Status polling (M.9) ────────────────────────────────────────────────────

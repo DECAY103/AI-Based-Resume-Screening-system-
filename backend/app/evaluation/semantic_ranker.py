@@ -14,10 +14,14 @@ IMPORTANT: sentence-transformers inference is CPU-bound and synchronous.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
-# TODO (Person 3 — M.7): Load model once at module level.
-# from sentence_transformers import SentenceTransformer
-# _model = SentenceTransformer("all-MiniLM-L6-v2")
+import numpy as np
+
+@lru_cache(maxsize=1)
+def _get_model():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
 
 @dataclass
@@ -54,4 +58,11 @@ def rank_candidates(
       4. Sort by score descending; set promoted=True for indices < top_n.
       5. Return the sorted RankedCandidate list.
     """
-    raise NotImplementedError("[M.7] rank_candidates not yet implemented.")
+    if not candidates or not rubric_text.strip() or top_n <= 0:
+        return [RankedCandidate(candidate_id, 0.0, False) for candidate_id in candidates]
+    model = _get_model()
+    texts = list(candidates.values())
+    embeddings = model.encode([rubric_text, *texts], convert_to_numpy=True, normalize_embeddings=True)
+    scores = np.dot(embeddings[1:], embeddings[0])
+    ranked = sorted(zip(candidates.keys(), scores), key=lambda item: float(item[1]), reverse=True)
+    return [RankedCandidate(candidate_id, float(score), index < top_n) for index, (candidate_id, score) in enumerate(ranked)]

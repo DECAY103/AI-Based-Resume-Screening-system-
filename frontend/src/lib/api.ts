@@ -35,6 +35,25 @@ export interface CandidateResult {
   status: "completed" | "pre_filtered";
 }
 
+export interface ProcessingFileResult {
+  filename: string;
+  status: "accepted" | "rejected" | "failed";
+  validation_passed: boolean;
+  extracted_text: string | null;
+  anonymised_text: string | null;
+  safety_passed: boolean | null;
+  safety_reason: string | null;
+  error: string | null;
+}
+
+export interface ProcessingResult {
+  input_type: "pdf" | "zip";
+  total_files: number;
+  accepted_files: number;
+  rejected_files: number;
+  files: ProcessingFileResult[];
+}
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -110,5 +129,19 @@ export const jobsApi = {
       `/jobs/${batchId}/results`
     );
     return data.results;
+  },
+};
+
+// ─── Ingestion & sanitisation preview (M.3 – M.6) ───────────────────────────
+
+export const processingApi = {
+  /** Run the Person 2 pipeline and return its direct, displayable output. */
+  preview: async (file: File): Promise<ProcessingResult> => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ProcessingResult>("/processing/preview", {
+      method: "POST",
+      body: form,
+    });
   },
 };

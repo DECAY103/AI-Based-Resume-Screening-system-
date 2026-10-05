@@ -14,15 +14,16 @@ Run locally:
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from app.database import init_db, close_db
+from app.database import init_db, close_db, run_migrations
 from app.persistence.recovery import recover_orphaned_jobs
-from app.routers import auth, candidates, jobs
+from app.routers import auth, candidates, jobs, processing
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── Startup ────────────────────────────────────────────────────────────────
     await init_db()
+    await run_migrations()
     await recover_orphaned_jobs()   # M.9 — Person 3
     yield
     # ── Shutdown ───────────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ app = FastAPI(
 app.include_router(auth.router,       prefix="/api/auth",       tags=["auth"])
 app.include_router(candidates.router, prefix="/api/candidates", tags=["candidates"])
 app.include_router(jobs.router,       prefix="/api/jobs",       tags=["jobs"])
+app.include_router(processing.router, prefix="/api/processing", tags=["processing"])
 
 
 @app.get("/api/health", tags=["health"])

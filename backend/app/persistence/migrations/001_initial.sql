@@ -5,6 +5,15 @@
 -- Extensions
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";  -- for gen_random_uuid()
 
+CREATE TABLE IF NOT EXISTS users (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email           TEXT NOT NULL UNIQUE,
+    password_hash   TEXT NOT NULL,
+    role            TEXT NOT NULL CHECK (role IN ('candidate', 'recruiter', 'admin')),
+    totp_secret     TEXT NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── batch_jobs ──────────────────────────────────────────────────────────────
 -- Tracks each upload batch (single résumé or ZIP archive).
 
@@ -26,6 +35,8 @@ CREATE TABLE IF NOT EXISTS batch_jobs (
     -- Stored for fault-recovery: enough context to re-run the pipeline on restart
     -- TODO (Person 3 — M.9): Add storage_url or file_path column if needed.
     rubric              JSONB,
+    upload_bytes        BYTEA,
+    upload_filename     TEXT,
     error_log           TEXT
 );
 
@@ -65,6 +76,8 @@ CREATE TABLE IF NOT EXISTS candidate_evaluations (
 
     -- Error details for failed candidates
     error_log               TEXT,
+
+    filename                TEXT,
 
     UNIQUE (batch_id, candidate_id)
 );

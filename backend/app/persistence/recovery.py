@@ -8,8 +8,9 @@ It finds any batch_job records stuck in queued / extracting / scoring states
 """
 from __future__ import annotations
 
-from app.database import get_pool
-from app.models import BatchStatus
+import asyncio
+from app.pipeline import run_batch
+from app.persistence.repository import list_recoverable_batches
 
 _STUCK_STATUSES = (
     BatchStatus.queued,
@@ -31,13 +32,6 @@ async def recover_orphaned_jobs() -> None:
           e.g. original file path or Supabase storage URL.)
       3. Log how many jobs were recovered.
     """
-    pool = get_pool()
-    # TODO (Person 3 — M.9): Implement recovery logic.
-    # async with pool.acquire() as conn:
-    #     rows = await conn.fetch(
-    #         "SELECT * FROM batch_jobs WHERE status = ANY($1::text[])",
-    #         [s.value for s in _STUCK_STATUSES],
-    #     )
-    #     for row in rows:
-    #         ...
-    pass
+    for batch in await list_recoverable_batches():
+        if batch["upload_bytes"]:
+            asyncio.create_task(run_batch(str(batch["batch_id"]), batch["upload_bytes"], batch["upload_filename"], batch["rubric"]))

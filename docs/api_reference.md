@@ -66,6 +66,20 @@ Batch ZIP upload (recruiter role).
 
 ---
 
+## Processing preview — Person 2
+
+### `POST /processing/preview`
+
+Run the validation, text extraction, PII anonymisation, and adversarial-content
+scan immediately. This endpoint accepts one `file` field containing a PDF or a
+ZIP of PDFs and does not rank or persist candidates.
+
+**Response `200`** includes a result per submitted PDF, with `extracted_text`,
+`anonymised_text`, and validation/safety decisions. Individual file failures are
+returned in the response so the user can see the reason.
+
+---
+
 ### `GET /jobs/{batch_id}/status`
 Polling endpoint for batch progress.
 
