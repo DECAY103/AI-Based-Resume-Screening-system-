@@ -75,6 +75,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ─── Auth API (M.2) ───────────────────────────────────────────────────────────
 
+export interface PasswordStrength {
+  checks: Record<string, boolean>;
+  score: number;
+  level: "weak" | "fair" | "good" | "strong";
+  is_acceptable: boolean;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  action: string;
+  detail: string | null;
+  ip_address: string | null;
+  created_at: string;
+}
+
 export const authApi = {
   register: (email: string, password: string, role: "candidate" | "recruiter") =>
     request<{ message: string; otpauth_uri: string }>("/auth/register", {
@@ -90,11 +107,35 @@ export const authApi = {
     }),
 
   verify: (temp_token: string, code: string) =>
-    request<{ access_token: string; token_type: string; role: string }>("/auth/verify", {
+    request<{ access_token: string; token_type: string; role: string; last_login_at: string | null }>("/auth/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ temp_token, code }),
     }),
+
+  checkPasswordStrength: (password: string) =>
+    request<PasswordStrength>("/auth/password-strength", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    }),
+
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (token: string, new_password: string) =>
+    request<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, new_password }),
+    }),
+
+  getActivityLogs: () =>
+    request<{ logs: ActivityLogEntry[] }>("/auth/activity-logs"),
 };
 
 // ─── Candidates API (M.1 / M.3) ──────────────────────────────────────────────

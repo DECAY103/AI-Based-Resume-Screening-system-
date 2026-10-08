@@ -40,6 +40,34 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8)
     role: UserRole
 
+    @staticmethod
+    def check_password_strength(password: str) -> dict:
+        """Return strength info dict. Used by both backend validation and the /password-strength endpoint."""
+        checks = {
+            "min_length": len(password) >= 8,
+            "has_upper": any(c.isupper() for c in password),
+            "has_lower": any(c.islower() for c in password),
+            "has_digit": any(c.isdigit() for c in password),
+            "has_special": any(c in "!@#$%^&*()_+-=[]{}|;':\",./<>?`~" for c in password),
+        }
+        score = sum(checks.values())
+        if score <= 2:
+            level = "weak"
+        elif score <= 3:
+            level = "fair"
+        elif score <= 4:
+            level = "good"
+        else:
+            level = "strong"
+        return {"checks": checks, "score": score, "level": level, "is_acceptable": score >= 4}
+
+
+class PasswordStrengthResponse(BaseModel):
+    checks: dict
+    score: int
+    level: str
+    is_acceptable: bool
+
 
 class RegisterResponse(BaseModel):
     message: str
@@ -60,6 +88,38 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: UserRole
+    last_login_at: Optional[str] = None
+
+
+# ─── Password Reset ───────────────────────────────────────────────────────────
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+
+class PasswordResetResponse(BaseModel):
+    message: str
+
+
+# ─── Activity Logs ────────────────────────────────────────────────────────────
+
+class ActivityLogEntry(BaseModel):
+    id: str
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+    action: str
+    detail: Optional[str] = None
+    ip_address: Optional[str] = None
+    created_at: str
+
+
+class ActivityLogsResponse(BaseModel):
+    logs: List[ActivityLogEntry]
 
 
 # ─── Upload responses (M.3 / M.9) ────────────────────────────────────────────

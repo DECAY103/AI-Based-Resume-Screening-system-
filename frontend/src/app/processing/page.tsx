@@ -110,22 +110,28 @@ export default function ProcessingPage() {
         <p>Upload one resume PDF or a ZIP of PDFs to validate it, extract its text, remove personal information, and run the safety scan.</p>
       </header>
 
-      <form className="upload-card" onSubmit={processFile}>
-        <input ref={inputRef} className="file-control" id="resume-file" type="file" accept=".pdf,.zip,application/pdf,application/zip" onChange={onFileChange} />
-        <button className="file-picker" type="button" onClick={() => inputRef.current?.click()}>
-          <span className="file-picker__icon">↑</span>
-          <span><strong>{file ? "Choose another file" : "Select a PDF or ZIP"}</strong><small>{file ? `${file.name} · ${fileSize(file.size)}` : "PDF up to 5 MB · ZIP up to 50 MB"}</small></span>
-        </button>
-        <div className="upload-actions">
-          <p>Nothing is ranked or saved here—this shows only the ingestion and sanitisation output.</p>
-          <button className="primary" type="submit" disabled={!file || loading}>
-            {loading ? "Processing…" : "Process file"}
+      <div className={`split-layout${result ? " split-layout--has-result" : ""}`}>
+        <form className="upload-card split-layout__upload" onSubmit={processFile}>
+          <input ref={inputRef} className="file-control" id="resume-file" type="file" accept=".pdf,.zip,application/pdf,application/zip" onChange={onFileChange} />
+          <button className="file-picker" type="button" onClick={() => inputRef.current?.click()}>
+            <span className="file-picker__icon">↑</span>
+            <span><strong>{file ? "Choose another file" : "Select a PDF or ZIP"}</strong><small>{file ? `${file.name} · ${fileSize(file.size)}` : "PDF up to 5 MB · ZIP up to 50 MB"}</small></span>
           </button>
-        </div>
-        {error && <p className="message error-message" role="alert">{error}</p>}
-      </form>
+          <div className="upload-actions">
+            <p>Nothing is ranked or saved here—this shows only the ingestion and sanitisation output.</p>
+            <button className="primary" type="submit" disabled={!file || loading}>
+              {loading ? "Processing…" : "Process file"}
+            </button>
+          </div>
+          {error && <p className="message error-message" role="alert">{error}</p>}
+        </form>
 
-      {result && <OutputCard result={result} />}
+        {result && (
+          <div className="split-layout__result">
+            <OutputCard result={result} />
+          </div>
+        )}
+      </div>
     </main>
   );
 }

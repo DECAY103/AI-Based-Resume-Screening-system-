@@ -31,11 +31,12 @@ async def close_db() -> None:
 
 
 async def run_migrations() -> None:
-    """Apply the idempotent initial schema on startup."""
+    """Apply all idempotent migration scripts on startup, in sorted order."""
     pool = get_pool()
-    migration = Path(__file__).parent / "persistence" / "migrations" / "001_initial.sql"
+    migrations_dir = Path(__file__).parent / "persistence" / "migrations"
     async with pool.acquire() as conn:
-        await conn.execute(migration.read_text())
+        for sql_file in sorted(migrations_dir.glob("*.sql")):
+            await conn.execute(sql_file.read_text())
 
 
 def get_pool() -> asyncpg.Pool:

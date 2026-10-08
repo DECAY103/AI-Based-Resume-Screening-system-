@@ -41,12 +41,19 @@ JWT_SECRET=<long random secret>
 JWT_ALGORITHM=HS256
 COOKIE_SECURE=true
 CORS_ORIGINS=https://your-vercel-site.vercel.app
+FRONTEND_URL=https://your-vercel-site.vercel.app
 LLM_PROVIDER=heuristic
 STAGE1_TOP_N=10
 MIN_SIMILARITY_SCORE=-1
 MAX_PDF_SIZE_MB=5
 MAX_ZIP_SIZE_MB=50
 MAX_ZIP_UNCOMPRESSED_MB=250
+PASSWORD_RESET_EXPIRE_MINUTES=30
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 For Gemini, change only the following after creating an API key in Google AI

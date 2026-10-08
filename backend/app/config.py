@@ -15,6 +15,15 @@ class Settings(BaseSettings):
     temp_token_expire_minutes: int = 10
     cookie_secure: bool = False
     cors_origins: str = "http://localhost:3000"
+    password_reset_expire_minutes: int = 30
+
+    # SMTP (password reset emails)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "noreply@resumescreening.local"
+    frontend_url: str = "http://localhost:3000"
 
     # Gemini (M.8)
     gemini_api_key: str = ""

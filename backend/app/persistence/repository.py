@@ -30,15 +30,99 @@ async def create_user(email: str, password_hash: str, role: UserRole, totp_secre
 async def get_user_by_email(email: str) -> Optional[dict]:
     pool = get_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id,email,password_hash,role,totp_secret FROM users WHERE email=$1", email.lower())
+        row = await conn.fetchrow("SELECT id,email,password_hash,role,totp_secret,last_login_at FROM users WHERE email=$1", email.lower())
     return dict(row) if row else None
 
 
 async def get_user(user_id: str) -> Optional[dict]:
     pool = get_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id,email,password_hash,role,totp_secret FROM users WHERE id=$1::uuid", user_id)
+        row = await conn.fetchrow("SELECT id,email,password_hash,role,totp_secret,last_login_at FROM users WHERE id=$1::uuid", user_id)
     return dict(row) if row else None
+
+
+async def update_last_login(user_id: str) -> Optional[str]:
+    """Set last_login_at to NOW() and return the *previous* value (for display)."""
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            previous = await conn.fetchval(
+                "SELECT last_login_at FROM users WHERE id=$1::uuid", user_id,
+            )
+            await conn.execute(
+                "UPDATE users SET last_login_at=NOW() WHERE id=$1::uuid", user_id,
+            )
+    if previous:
+        return previous.isoformat()
+    return None
+
+
+async def update_password(user_id: str, new_password_hash: str) -> None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute("UPDATE users SET password_hash=$1 WHERE id=$2::uuid", new_password_hash, user_id)
+
+
+# ─── Activity Logs ────────────────────────────────────────────────────────────
+
+async def log_activity(
+    action: str,
+    *,
+    user_id: str | None = None,
+    email: str | None = None,
+    detail: str | None = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "INSERT INTO activity_logs (user_id,email,action,detail,ip_address,user_agent) VALUES ($1::uuid,$2,$3,$4,$5,$6)",
+            user_id, email, action, detail, ip_address, user_agent,
+        )
+
+
+async def get_activity_logs(user_id: str | None = None, limit: int = 50) -> list[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        if user_id:
+            rows = await conn.fetch(
+                "SELECT id,user_id,email,action,detail,ip_address,user_agent,created_at FROM activity_logs WHERE user_id=$1::uuid ORDER BY created_at DESC LIMIT $2",
+                user_id, limit,
+            )
+        else:
+            rows = await conn.fetch(
+                "SELECT id,user_id,email,action,detail,ip_address,user_agent,created_at FROM activity_logs ORDER BY created_at DESC LIMIT $1",
+                limit,
+            )
+    return [dict(r) for r in rows]
+
+
+# ─── Password Reset Tokens ────────────────────────────────────────────────────
+
+async def create_password_reset_token(user_id: str, token: str, expires_at) -> None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "INSERT INTO password_reset_tokens (user_id,token,expires_at) VALUES ($1::uuid,$2,$3)",
+            user_id, token, expires_at,
+        )
+
+
+async def get_valid_reset_token(token: str) -> Optional[dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id,user_id,token,expires_at FROM password_reset_tokens WHERE token=$1 AND used=FALSE AND expires_at > NOW()",
+            token,
+        )
+    return dict(row) if row else None
+
+
+async def mark_reset_token_used(token: str) -> None:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute("UPDATE password_reset_tokens SET used=TRUE WHERE token=$1", token)
 
 
 async def create_batch_job(batch_id: str, total_files: int, rubric: Any, upload_bytes: bytes, upload_filename: str) -> None:
